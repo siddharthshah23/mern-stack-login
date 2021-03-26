@@ -2,31 +2,6 @@ const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const { sendEmailWithNodemailer } = require("../helpers/email");
 
-// exports.signup = (req, res) => {
-//   const { name, email, password } = req.body;
-//   try {
-//     //Find if user exist
-//     User.findOne({ email }).exec((err, user) => {
-//       if (user) {
-//         return res.status(400).json({ error: "Email already taken" });
-//       }
-//       // Creating  a new User
-//       let newUser = new User({ name, email, password });
-//       newUser.save((err, success) => {
-//         if (err) {
-//           console.log(err);
-//           return res.status(400).json({ error: err });
-//         }
-//         return res.json({ message: "Sign up success", user: newUser });
-//         // Send the New User back
-//         //user: newUser
-//       });
-//     });
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
-
 exports.signup = (req, res) => {
   const { name, email, password } = req.body;
 
@@ -90,6 +65,7 @@ exports.accountActivation = (req, res) => {
             });
           }
           return res.json({
+            // user : user to send back the user details
             message: "Signup success. Please signin.",
           });
         });
@@ -100,4 +76,32 @@ exports.accountActivation = (req, res) => {
       message: "Something went wrong. Try again.",
     });
   }
+};
+
+exports.signin = (req, res) => {
+  const { email, password } = req.body;
+  // check if user exist
+  User.findOne({ email }).exec((err, user) => {
+    if (err || !user) {
+      return res.status(400).json({
+        error: "User with that email does not exist. Please signup",
+      });
+    }
+    // authenticate
+    if (!user.authenticate(password)) {
+      return res.status(400).json({
+        error: "Email and password do not match",
+      });
+    }
+    // generate a token and send to client
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+    const { _id, name, email, role } = user;
+
+    return res.json({
+      token,
+      user: { _id, name, email, role },
+    });
+  });
 };
