@@ -14,6 +14,11 @@ const Navbar = ({ children }) => {
           Signup
         </Link>
       </li>
+      <li>
+        <Link to="/signin" className="text-light nav-link">
+          Signin
+        </Link>
+      </li>
     </ul>
   );
 
