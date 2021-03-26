@@ -32,9 +32,23 @@ exports.signup = (req, res) => {
         <p> ${process.env.CLIENT_URL}</p>
       `,
     };
-    sendEmailWithNodemailer(req, res, emailData).then(() => {
-      console.log("Email sent");
-    });
+    // sendEmailWithNodemailer(req, res, emailData).then(() => {
+    //   console.log("Email sent");
+    // });
+    // console.log("Success");
+
+    sendEmailWithNodemailer(req, res, emailData)
+      .then((sent) => {
+        // console.log("Email sent", sent);
+        res.json({
+          message: `Email has been sent to ${email}. Follow the instruction to activate your account`,
+        });
+      })
+      .catch((err) => {
+        return res.json({
+          message: err.message,
+        });
+      });
   });
 };
 
