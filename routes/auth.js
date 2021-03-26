@@ -1,8 +1,16 @@
 const express = require("express");
-const router = require("router");
+const router = express.Router();
 
-router.get("/api/signup", (req, res) => {
-  res.json({
-    data: "you hit signup endpoint",
-  });
-});
+// Importing Controller
+
+const { signup, accountActivation } = require("../controllers/auth");
+
+// Import validators
+
+const { userSignupValidator } = require("../validator/auth");
+const { runValidation } = require("../validator/index");
+
+router.post("/signup", userSignupValidator, runValidation, signup);
+router.post("/account-activation", accountActivation);
+
+module.exports = router;
