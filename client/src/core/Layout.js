@@ -2,24 +2,32 @@ import React, { Fragment } from "react";
 import { Link, withRouter } from "react-router-dom";
 import { isAuth, signout } from "../components/auth/Helper";
 
-const Navbar = ({ children, match, history }) => {
+const Layout = ({ children, match, history }) => {
+  const isActive = (path) => {
+    if (match.path === path) {
+      return { color: "#000" };
+    } else {
+      return { color: "#fff" };
+    }
+  };
+
   const nav = () => (
     <ul className="nav nav-tabs bg-primary">
       <li className="nav-item">
-        <Link to="/" className="nav-link text-light">
+        <Link to="/" className="nav-link" style={isActive("/")}>
           Home
         </Link>
       </li>
 
       {!isAuth() && (
         <Fragment>
-          <li className="nav-item ">
-            <Link to="/signin" className="nav-link text-light">
+          <li className="nav-item">
+            <Link to="/signin" className="nav-link" style={isActive("/signin")}>
               Signin
             </Link>
           </li>
           <li className="nav-item">
-            <Link to="/signup" className="nav-link text-light">
+            <Link to="/signup" className="nav-link" style={isActive("/signup")}>
               Signup
             </Link>
           </li>
@@ -39,7 +47,7 @@ const Navbar = ({ children, match, history }) => {
             style={{ cursor: "pointer", color: "#fff" }}
             onClick={() => {
               signout(() => {
-                console.log("Signout");
+                history.push("/");
               });
             }}
           >
@@ -58,4 +66,4 @@ const Navbar = ({ children, match, history }) => {
   );
 };
 
-export default Navbar;
+export default withRouter(Layout);

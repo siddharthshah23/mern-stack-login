@@ -3,6 +3,7 @@ import { Link, Redirect } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
+import { isAuth } from "./Helper";
 
 const Signup = () => {
   const [values, setValues] = useState({
@@ -88,6 +89,7 @@ const Signup = () => {
   );
   return (
     <div className="col-md-6 offset-md-3">
+      {isAuth() ? <Redirect to="/" /> : null}
       <ToastContainer />
       <h1 className="p-5 text-center">Signup</h1>
       {signupForm()}

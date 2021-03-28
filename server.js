@@ -9,7 +9,6 @@ require("dotenv").config();
 const app = express();
 
 // connect to db
-
 mongoose
   .connect(process.env.DATABASE, {
     useNewUrlParser: true,
@@ -19,8 +18,10 @@ mongoose
   })
   .then(() => console.log("Database is connected"))
   .catch((err) => console.log("Error"));
+
 // Import Routes
 const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/user");
 
 // app middleware
 app.use(morgan("dev"));
@@ -31,6 +32,7 @@ if ((process.env.NODE_ENV = "development")) {
 
 //Middleware
 app.use("/api", authRoutes);
+app.use("/api", userRoutes);
 
 const port = process.env.PORT || 8000;
 app.listen(port, () => {
