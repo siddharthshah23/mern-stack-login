@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const { sendEmailWithNodemailer } = require("../helpers/email");
 const expressJwt = require("express-jwt");
 const user = require("../models/user");
+const _ = require("lodash");
 
 exports.signup = (req, res) => {
   const { name, email, password } = req.body;
@@ -150,47 +151,55 @@ exports.forgotPassword = (req, res) => {
 
   User.findOne({ email }, (err, user) => {
     if (err || !user) {
-      return res.status(400).json({ error: "Email id not correct" });
+      return res
+        .status(400)
+        .json({ error: "User with that email does not exist" });
     }
-  });
 
-  const token = jwt.sign({ _id: user._id }, process.env.JWT_RESET_PASSWORD, {
-    expiresIn: "10m",
-  });
-  const emailData = {
-    from: process.EMAIL_FROM, // MAKE SURE THIS EMAIL IS YOUR GMAIL FOR WHICH YOU GENERATED APP PASSWORD
-    to: email, // WHO SHOULD BE RECEIVING THIS EMAIL? IT SHOULD BE YOUR GMAIL
-    subject: ` Password reset Link`,
-    // text: `Email received from contact from \n Sender name: ${name} \n Sender email: ${email} \n Sender message: ${message}`,
-    html: `
+    const token = jwt.sign(
+      { _id: user._id, name: user.name },
+      process.env.JWT_RESET_PASSWORD,
+      {
+        expiresIn: "10m",
+      }
+    );
+
+    const emailData = {
+      from: process.EMAIL_FROM, // MAKE SURE THIS EMAIL IS YOUR GMAIL FOR WHICH YOU GENERATED APP PASSWORD
+      to: email, // WHO SHOULD BE RECEIVING THIS EMAIL? IT SHOULD BE YOUR GMAIL
+      subject: ` Password reset Link`,
+      // text: `Email received from contact from \n Sender name: ${name} \n Sender email: ${email} \n Sender message: ${message}`,
+      html: `
       <h1> Please use the following link to reset password</h1>
-      <p> ${process.env.CLIENT_URL}/auth/password/reset${token}</p>
+      <p> ${process.env.CLIENT_URL}/auth/password/reset/${token}</p>
       <hr/>
       <p>This email may contain senstive infornmation</p>
       <p> ${process.env.CLIENT_URL}</p>
     `,
-  };
+    };
 
-  return user.updateOne({ resetPasswordLink: token }, (err, success) => {
-    if (err) {
-      console.log("RESET PASSWORD LINK ERROR", err);
-      return res.status(400).json({
-        error: "Database connection error on user password forgot request",
-      });
-    } else {
-      sendEmailWithNodemailer(req, res, emailData)
-        .then((sent) => {
-          console.log("Reset Password Email has been sent", sent);
-          res.json({
-            message: `Email has been sent to ${email}. Follow the instructions to reset your account Password`,
-          });
-        })
-        .catch((err) => {
-          return res.json({
-            message: err.message,
-          });
+    return user.updateOne({ resetPasswordLink: token }, (err, success) => {
+      if (err) {
+        console.log("RESET PASSWORD LINK ERROR", err);
+
+        return res.status(400).json({
+          error: "DATABASE CONNECTION ERROR OR USER FORGOT PASSWORD ERROR",
         });
-    }
+      } else {
+        sendEmailWithNodemailer(req, res, emailData)
+          .then((sent) => {
+            console.log("Reset Password Email has been sent", sent);
+            res.json({
+              message: `Email has been sent to ${email}. Follow the instructions to reset your account Password`,
+            });
+          })
+          .catch((err) => {
+            return res.json({
+              message: err.message,
+            });
+          });
+      }
+    });
   });
 };
 
@@ -221,6 +230,10 @@ exports.resetPassword = (req, res) => {
           };
 
           user = _.extend(user, updatedFields);
+
+          // res.json({
+          //   message: user,
+          // });
 
           user.save((err, result) => {
             if (err) {
